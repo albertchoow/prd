@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潮汐 · 取消挽留 UX 流程</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif; background: #F0F0F5; color: #1a1a1a; overflow-x: hidden; }
+
+  .top { padding: 40px 20px 0; max-width: 1100px; margin: 0 auto; text-align: center; }
+  .top h1 { font-size: 22px; font-weight: 700; }
+  .top .sub { font-size: 13px; color: #999; margin-top: 6px; margin-bottom: 28px; }
+
+  /* Flow diagram */
+  .fd { max-width: 800px; margin: 0 auto 36px; padding: 24px 20px; background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+  .fd h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: #333; }
+  .ft { font-size: 12px; color: #555; line-height: 2.1; font-family: "SF Mono","Menlo",monospace; white-space: pre-wrap; padding: 0 8px; }
+  .ft .hl { background: #FFF5EB; color: #C06A10; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+  .ft .pa { background: #DBEAFE; color: #1E40AF; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+  .ft .pb { background: #FCE7F3; color: #9D174D; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+  .ft .ok { background: #D1FAE5; color: #166534; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+
+  /* Steps */
+  .ss { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  .sn { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .sd { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; border: 2.5px solid transparent; }
+  .sd.cur { background: #FF8533; color: #fff; border-color: #FF8533; box-shadow: 0 3px 14px rgba(255,133,51,.35); }
+  .sd.dn { background: #D1FAE5; color: #166534; }
+  .sd.up { background: #F3F4F6; color: #999; }
+  .sc2 { width: 16px; height: 2px; background: #E5E7EB; }
+  .stb { text-align: center; margin-bottom: 20px; }
+  .stb h3 { font-size: 16px; font-weight: 700; color: #333; }
+  .stb p { font-size: 12px; color: #999; margin-top: 4px; }
+
+  /* Phone */
+  .pc { display: flex; justify-content: center; margin-bottom: 8px; }
+  .ph { width: 340px; background: #111; border-radius: 44px; padding: 12px; box-shadow: 0 24px 80px rgba(0,0,0,.2); }
+  .scr { background: #fff; border-radius: 32px; overflow: hidden; min-height: 680px; display: flex; flex-direction: column; }
+
+  /* Screen common */
+  .sb { display: none; }
+  .nb { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #f0f0f0; }
+  .nb .bk { font-size: 22px; color: #333; width: 30px; cursor: pointer; }
+  .nb .ti { flex: 1; text-align: center; font-size: 15px; font-weight: 600; }
+  .nb .sp { width: 30px; }
+  .ct { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+
+  /* Card */
+  .cw { border-radius: 16px; padding: 18px; margin-bottom: 14px; background: linear-gradient(135deg, #FFF8F0, #FFF3E6); }
+  .cf { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+  .pi { width: 36px; height: 36px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #E8923A; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .cn { font-size: 14px; font-weight: 600; }
+  .cs { font-size: 11px; color: #E8923A; margin-top: 1px; }
+  .ci { border-top: 1px solid rgba(200,180,160,.2); padding-top: 10px; margin-top: 10px; }
+  .cr { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; }
+  .cr .k { color: #999; }
+  .cr .v { color: #333; }
+  .cr .vh { color: #E8923A; font-weight: 600; }
+
+  /* Action btns */
+  .ab { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: all .15s; border: none; font-family: inherit; text-align: left; }
+  .ab .t { font-size: 13px; font-weight: 600; }
+  .ab .d { font-size: 11px; margin-top: 2px; }
+  .ab .ar { font-size: 14px; flex-shrink: 0; }
+  .am { background: #F0F7FF; }
+  .am .t { color: #1E40AF; } .am .d { color: #93C5FD; } .am .ar { color: #3B82F6; }
+  .am:hover { background: #E0EFFF; }
+  .ac { background: #F9FAFB; }
+  .ac .t { color: #666; } .ac .d { color: #bbb; } .ac .ar { color: #ccc; }
+  .ac:hover { background: #F3F4F6; }
+
+  .sl { font-size: 15px; font-weight: 700; margin: 14px 0 10px; }
+  .fr { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+  .fr .q { font-size: 13px; } .fr .qd { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .fr .fa { color: #ccc; font-size: 15px; flex-shrink: 0; margin-left: 8px; }
+
+  /* Confirm */
+  .cic { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #FFF0E0, #FFE4CC); display: flex; align-items: center; justify-content: center; margin: 8px auto 18px; }
+  .ctit { text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .csub { text-align: center; font-size: 12.5px; color: #999; margin-bottom: 6px; line-height: 1.6; }
+  .lc { background: #FFF8F0; border-radius: 12px; padding: 14px; margin: 14px 0 20px; }
+  .lt { font-size: 12px; font-weight: 600; color: #C06A10; margin-bottom: 8px; }
+  .li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8B5E34; padding: 4px 0; }
+  .ld { width: 5px; height: 5px; border-radius: 50%; background: #E8923A; flex-shrink: 0; }
+
+  .bp { width: 100%; padding: 14px; border: none; border-radius: 14px; background: linear-gradient(135deg, #FF9A56, #FF7A2E); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .bp:hover { opacity: .9; }
+  .bg { text-align: center; margin-top: 14px; }
+  .bg a { color: #bbb; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .bd { width: 100%; padding: 14px; border: none; border-radius: 14px; background: #1a1a1a; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .spc { flex: 1; }
+
+  /* Survey */
+  .svi { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #FFF0E0, #FFE4CC); display: flex; align-items: center; justify-content: center; margin: 8px auto 16px; }
+  .svt { text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .svs { text-align: center; font-size: 12.5px; color: #aaa; margin-bottom: 20px; }
+  .rl { display: flex; flex-direction: column; gap: 9px; margin-bottom: 20px; }
+  .rb { width: 100%; text-align: left; padding: 12px 14px; border-radius: 11px; border: 2px solid transparent; background: #F7F7F8; font-size: 12.5px; color: #555; cursor: pointer; transition: all .12s; font-family: inherit; }
+  .rb:hover { background: #FFF8F0; }
+  .rb.sel { background: #FFF5EB; border-color: #F0A860; color: #C06A10; font-weight: 600; }
+  .other-input { width: 100%; margin-top: 8px; padding: 10px 12px; border: 1.5px solid #E5E7EB; border-radius: 10px; font-size: 12px; font-family: inherit; color: #333; outline: none; resize: none; height: 64px; transition: border-color .15s; }
+  .other-input:focus { border-color: #F0A860; }
+  .other-input::placeholder { color: #ccc; }
+  .other-wrap { display: none; }
+  .other-wrap.show { display: block; }
+
+  /* SVG icon containers */
+  .ico-circle { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 8px auto 18px; }
+  .ico-circle.warm { background: linear-gradient(135deg, #FFF0E0, #FFE4CC); }
+  .ico-circle.blue { background: linear-gradient(135deg, #E0EEFF, #D0E4FF); }
+  .ico-circle-sm { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 8px auto 16px; }
+  .ico-circle-sm.warm { background: linear-gradient(135deg, #FFF0E0, #FFE4CC); }
+
+  /* Jump */
+  .ji { text-align: center; margin: 32px 0 20px; }
+  .jt { text-align: center; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .jd { text-align: center; font-size: 13px; color: #999; line-height: 1.7; padding: 0 10px; }
+  .pl { margin: 24px 0; }
+  .pr { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #F7F7F8; border-radius: 12px; margin-bottom: 8px; }
+  .pe { font-size: 20px; } .pn { font-size: 13px; font-weight: 600; flex: 1; } .pm { font-size: 10px; color: #999; }
+  .fb { font-size: 11px; color: #aaa; text-align: center; margin-top: 12px; line-height: 1.6; padding: 12px; background: #FAFAFA; border-radius: 10px; }
+
+  /* Success */
+  .oi { text-align: center; margin: 40px 0 16px; }
+  .ot { text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .os { text-align: center; font-size: 13px; color: #999; line-height: 1.7; }
+  .oc { background: #F0FDF4; border-radius: 12px; padding: 16px; margin: 24px 0; text-align: center; }
+  .oc .big { font-size: 28px; font-weight: 800; color: #166534; }
+  .oc .lbl { font-size: 12px; color: #22C55E; margin-top: 4px; }
+
+  /* Annotations */
+  .as { max-width: 680px; margin: 0 auto; padding: 20px 20px 40px; }
+  .as h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+  .an { background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+  .tg { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .tg.ux { background: #DBEAFE; color: #1E40AF; }
+  .tg.cp { background: #FEF3C7; color: #92400E; }
+  .tg.ky { background: #FCE7F3; color: #9D174D; }
+  .ant { font-size: 12.5px; font-weight: 600; color: #333; }
+  .and { font-size: 11px; color: #999; margin-top: 2px; }
+
+
+  .hid { display: none !important; }
+  @media(max-width:500px){ .ph{width:100%;} .fd{padding:16px 12px;} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>潮汐 · 取消挽留 UX 完整流程</h1>
+  <p class="sub">点击步骤圆点切换 · 页面内按钮可交互</p>
+</div>
+
+
+<!-- ══ STEP NAV ══ -->
+<div class="ss">
+  <div class="sn">
+    <div class="sd cur" onclick="go(1)" id="d1">1</div><div class="sc2"></div>
+    <div class="sd up" onclick="go(2)" id="d2">2</div><div class="sc2"></div>
+    <div class="sd up" onclick="go(3)" id="d3">3</div><div class="sc2"></div>
+    <div class="sd up" onclick="go(4)" id="d4">4</div><div class="sc2"></div>
+    <div class="sd up" onclick="go(5)" id="d5">5</div>
+  </div>
+  <div class="stb">
+    <h3 id="sT">Step 1 · 会员中心</h3>
+    <p id="sD">两个明确出口：「管理订阅」直达系统设置 ·「取消订阅」进入挽留流程</p>
+  </div>
+</div>
+
+<!-- ══ PHONE ══ -->
+<div class="ss">
+  <div class="pc">
+    <div class="ph">
+      <div class="scr">
+
+        <!-- S1: 会员中心 -->
+        <div id="s1">
+          <div class="sb"><span>12:01</span><div class="r"><span>●●●●</span><span class="bt">69</span></div></div>
+          <div class="nb"><span class="bk">‹</span><span class="ti">我的会员</span><span class="sp"></span></div>
+          <div class="ct">
+            <div class="cw">
+              <div class="cf">
+                <div class="pi">Plus</div>
+                <div><div class="cn">潮汐 Plus</div><div class="cs">会员生效中</div></div>
+              </div>
+              <div class="ci">
+                <div class="cr"><span class="k">当前方案</span><span class="v">连续包月 · ¥18/月</span></div>
+                <div class="cr"><span class="k">下次扣费</span><span class="v">2026 年 5 月 8 日</span></div>
+                <div class="cr"><span class="k">已伴你专注</span><span class="v vh">128 天</span></div>
+              </div>
+            </div>
+
+            <button class="ab am" onclick="go(4)">
+              <div><div class="t">管理订阅</div><div class="d">变更方案、查看订阅详情</div></div>
+              <span class="ar">›</span>
+            </button>
+            <button class="ab ac" onclick="go(2)">
+              <div><div class="t">取消订阅</div><div class="d">取消自动续费</div></div>
+              <span class="ar">›</span>
+            </button>
+
+            <div class="sl" style="margin-top:18px">关于你的会员</div>
+            <div class="fr">
+              <div><div class="q">取消后会怎样？</div><div class="qd">当前周期内仍可使用，到期后恢复免费版</div></div>
+              <span class="fa">›</span>
+            </div>
+            <div class="fr">
+              <div><div class="q">扣费前会通知我吗？</div><div class="qd">系统会在扣费前 24 小时提醒</div></div>
+              <span class="fa">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- S2: 取消确认 -->
+        <div id="s2" class="hid">
+          <div class="sb"><span>12:01</span><div class="r"><span>●●●●</span><span class="bt">69</span></div></div>
+          <div class="ct">
+            <div class="ico-circle blue"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+            <div class="ctit">确定要离开吗？</div>
+            <div class="csub">取消后，以下权益将在 2026.05.08 失效</div>
+            <div class="lc">
+              <div class="lt">你将失去</div>
+              <div class="li"><span class="ld"></span>全部白噪音与自然声景</div>
+              <div class="li"><span class="ld"></span>睡眠监测与梦话记录</div>
+              <div class="li"><span class="ld"></span>冥想课程与 HRV 压力分析</div>
+              <div class="li"><span class="ld"></span>128 天的专注数据回顾</div>
+            </div>
+            <div class="spc"></div>
+            <button class="bp" onclick="go(5)">我再想想，保留会员</button>
+            <div class="bg"><a onclick="go(3)">仍然要取消</a></div>
+          </div>
+        </div>
+
+        <!-- S3: 问卷 -->
+        <div id="s3" class="hid">
+          <div class="sb"><span>12:02</span><div class="r"><span>●●●●</span><span class="bt">69</span></div></div>
+          <div class="ct">
+            <div class="ico-circle-sm warm"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8923A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+            <div class="svt">我们想做得更好</div>
+            <div class="svs">告诉我们原因，帮助潮汐变得更好</div>
+            <div class="rl">
+              <button class="rb" onclick="pk(this)">还没找到适合我的内容</button>
+              <button class="rb" onclick="pk(this)">先取消，怕忘了被扣钱</button>
+              <button class="rb" onclick="pk(this)">我在用其他 App</button>
+              <button class="rb" onclick="pk(this)">只是随便试试</button>
+              <button class="rb" onclick="pk(this)">价格太高</button>
+              <button class="rb" onclick="pk(this,'other')">其他</button>
+            </div>
+            <div class="other-wrap" id="otherWrap">
+              <textarea class="other-input" placeholder="告诉我们具体原因（选填）"></textarea>
+            </div>
+            <div class="spc"></div>
+            <button class="bp" onclick="go(5)">保留订阅</button>
+            <div class="bg"><a onclick="go(4)">继续取消</a></div>
+          </div>
+        </div>
+
+        <!-- S4: 跳转 -->
+        <div id="s4" class="hid">
+          <div class="sb"><span>12:02</span><div class="r"><span>●●●●</span><span class="bt">69</span></div></div>
+          <div class="ct">
+            <div class="ji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+            <div class="jt">跳转至系统订阅管理</div>
+            <div class="jd">正在打开系统设置…<br>你可以在系统页面中变更方案或完成取消</div>
+            <div class="pl">
+              <div class="pr"><span class="pe" style="font-size:13px;font-weight:700;color:#333;">iOS</span><span class="pn"></span><span class="pm">StoreKit 2 showManageSubscriptions</span></div>
+              <div class="pr"><span class="pe" style="font-size:13px;font-weight:700;color:#333;">GP</span><span class="pn"></span><span class="pm">play.google.com/.../subscriptions</span></div>
+              <div class="pr"><span class="pe" style="font-size:13px;font-weight:700;color:#333;">HMS</span><span class="pn"></span><span class="pm">HMS IAP createManageSubscriptionIntent</span></div>
+            </div>
+            <div class="fb">跳转失败时，降级展示对应平台的图文取消教程</div>
+            <div class="spc"></div>
+            <button class="bd" onclick="go(1)">← 回到 Step 1</button>
+          </div>
+        </div>
+
+        <!-- S5: 保留成功 -->
+        <div id="s5" class="hid">
+          <div class="sb"><span>12:02</span><div class="r"><span>●●●●</span><span class="bt">69</span></div></div>
+          <div class="ct">
+            <div class="oi"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="ot">欢迎回来</div>
+            <div class="os">感谢你选择留下<br>我们会继续努力做得更好</div>
+            <div class="oc"><div class="big">128 天</div><div class="lbl">你和潮汐一起走过的日子</div></div>
+            <div class="spc"></div>
+            <button class="bd" onclick="go(1)">继续探索</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ANNOTATIONS ══ -->
+<div class="as">
+  <h3 id="aT">Step 1 — 设计说明</h3>
+
+  <div id="a1">
+    <div class="an"><div class="tg ky">核心</div><div><div class="ant">两个按钮，两条路径，互不干扰</div><div class="and">「管理订阅」→ 直接跳系统设置（变更方案、查看详情、无挽留）<br>「取消订阅」→ 进入挽留流程（确认页 → 问卷 → 跳转）</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">「管理订阅」蓝色卡片，视觉优先级更高</div><div class="and">大部分用户点管理只是想看到期时间或换方案，不应被拦截</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">「取消订阅」灰色卡片，弱化但不隐藏</div><div class="and">合规要求取消入口可见，但视觉上不引导用户往这走</div></div></div>
+    <div class="an"><div class="tg cp">文案</div><div><div class="ant">价格 + 扣费日 + 使用天数，透明展示</div><div class="and">价格透明降低「怕扣钱」焦虑；128 天制造沉没成本</div></div></div>
+  </div>
+
+  <div id="a2" class="hid">
+    <div class="an"><div class="tg ky">核心</div><div><div class="ant">先告诉用户「你会失去什么」，再问原因</div><div class="and">用具体权益清单触发损失厌恶，比直接弹问卷更有效</div></div></div>
+    <div class="an"><div class="tg cp">文案</div><div><div class="ant">「确定要离开吗？」+ 具体到期日期</div><div class="and">情感化但不过度煽情；日期具体化让用户知道还剩多少时间</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">权益清单最后一条放使用天数</div><div class="and">前三条是功能损失，最后一条是情感损失（128 天白费了）</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">V1 可选：可跳过此页直接到问卷</div><div class="and">追求最小 MVP 可砍，但建议保留——开发成本极低，挽留增量约 5-8%</div></div></div>
+  </div>
+
+  <div id="a3" class="hid">
+    <div class="an"><div class="tg ky">核心</div><div><div class="ant">V1 核心数据采集页 — 只收集，不做分支挽留</div><div class="and">2-4 周数据回收后再决定哪个原因值得做针对性挽留</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">不强制选择，未选也能点「继续取消」</div><div class="and">reason_code 为空本身也是信号（用户对问卷不耐烦）</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">没有返回按钮，只有两个出口</div><div class="and">保留 → Step 5 · 继续取消 → Step 4 跳转系统设置</div></div></div>
+    <div class="an"><div class="tg cp">文案</div><div><div class="ant">6 个选项，选「其他」展开输入框（选填）</div><div class="and">输入框不强制填写，给愿意表达的用户一个出口</div></div></div>
+  </div>
+
+  <div id="a4" class="hid">
+    <div class="an"><div class="tg ky">核心</div><div><div class="ant">「管理订阅」和「继续取消」的共同终点</div><div class="and">两条路径最终都跳到同一个系统设置页，但经过的链路和埋点不同</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">按平台自动识别跳转方式</div><div class="and">iOS → StoreKit 2 · Google Play → Deep Link · 鸿蒙 → HMS IAP</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">跳转失败 → 降级图文教程</div><div class="and">不让用户卡在死胡同，低版本或 API 异常时有兜底</div></div></div>
+  </div>
+
+  <div id="a5" class="hid">
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">保留成功 → 正向反馈闭环</div><div class="and">不要默默关页面，给用户「做了正确选择」的温暖感</div></div></div>
+    <div class="an"><div class="tg cp">文案</div><div><div class="ant">再次展示 128 天，强化留下的理由</div><div class="and">让用户带着正面情绪回到 App，而非「差点被套路」的不适</div></div></div>
+  </div>
+</div>
+
+
+<script>
+const ST={
+  1:{t:'Step 1 · 会员中心',d:'两个明确出口：「管理订阅」直达系统设置 ·「取消订阅」进入挽留流程'},
+  2:{t:'Step 2 · 取消确认',d:'用具体权益清单告诉用户「你将失去什么」— 损失厌恶驱动的第一层挽留'},
+  3:{t:'Step 3 · 取消原因问卷',d:'V1 核心 — 收集取消原因数据，不做分支挽留'},
+  4:{t:'Step 4 · 跳转系统设置',d:'「管理订阅」和「继续取消」的共同终点 — 按平台跳转'},
+  5:{t:'Step 5 · 保留成功',d:'用户选择留下后的正向反馈 · 情感闭环'},
+};
+function go(n){
+  for(let i=1;i<=5;i++){
+    document.getElementById('s'+i).classList.add('hid');
+    document.getElementById('a'+i).classList.add('hid');
+    document.getElementById('d'+i).className='sd '+(i<n?'dn':i===n?'cur':'up');
+  }
+  document.getElementById('s'+n).classList.remove('hid');
+  document.getElementById('a'+n).classList.remove('hid');
+  document.getElementById('sT').textContent=ST[n].t;
+  document.getElementById('sD').textContent=ST[n].d;
+  document.getElementById('aT').textContent=ST[n].t+' — 设计说明';
+  document.querySelector('.pc').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function pk(el,type){
+  document.querySelectorAll('.rb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  var ow=document.getElementById('otherWrap');
+  if(type==='other'){ ow.classList.add('show'); } else { ow.classList.remove('show'); }
+}
+</script>
+</body>
+</html>
