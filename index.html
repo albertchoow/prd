@@ -261,14 +261,24 @@
           <div class="sb"><span>12:02</span><div class="r"><span>●●●●</span><span class="bt">69</span></div></div>
           <div class="ct">
             <div class="ji"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
-            <div class="jt">跳转至系统订阅管理</div>
-            <div class="jd">正在打开系统设置…<br>你可以在系统页面中变更方案或完成取消</div>
-            <div class="pl">
-              <div class="pr"><span class="pe" style="font-size:13px;font-weight:700;color:#333;">iOS</span><span class="pn"></span><span class="pm">StoreKit 2 showManageSubscriptions</span></div>
-              <div class="pr"><span class="pe" style="font-size:13px;font-weight:700;color:#333;">GP</span><span class="pn"></span><span class="pm">play.google.com/.../subscriptions</span></div>
-              <div class="pr"><span class="pe" style="font-size:13px;font-weight:700;color:#333;">HMS</span><span class="pn"></span><span class="pm">HMS IAP createManageSubscriptionIntent</span></div>
+            <div class="jt">跳转至订阅管理</div>
+            <div class="jd">根据用户的支付渠道，跳转到对应的取消入口</div>
+
+            <div style="font-size:11px;font-weight:700;color:#999;margin:18px 0 8px;letter-spacing:.5px;">商店支付渠道</div>
+            <div class="pl" style="margin:0 0 4px;">
+              <div class="pr"><span class="pe" style="font-size:12px;font-weight:700;color:#333;min-width:36px;">iOS</span><span class="pn"></span><span class="pm">StoreKit 2 showManageSubscriptions</span></div>
+              <div class="pr"><span class="pe" style="font-size:12px;font-weight:700;color:#333;min-width:36px;">华为</span><span class="pn"></span><span class="pm">华为支付 · 华为应用商店内购</span></div>
+              <div class="pr"><span class="pe" style="font-size:12px;font-weight:700;color:#333;min-width:36px;">鸿蒙</span><span class="pn"></span><span class="pm">鸿蒙支付 · HMS IAP</span></div>
+              <div class="pr"><span class="pe" style="font-size:12px;font-weight:700;color:#333;min-width:36px;">小米</span><span class="pn"></span><span class="pm">小米支付 · 小米应用商店内购</span></div>
             </div>
-            <div class="fb">跳转失败时，降级展示对应平台的图文取消教程</div>
+
+            <div style="font-size:11px;font-weight:700;color:#999;margin:14px 0 8px;letter-spacing:.5px;">支付宝 / 微信支付渠道</div>
+            <div class="pl" style="margin:0 0 4px;">
+              <div class="pr"><span class="pe" style="font-size:12px;font-weight:700;color:#333;min-width:36px;">OPPO</span><span class="pn"></span><span class="pm">引导至支付宝/微信「自动扣款」设置</span></div>
+              <div class="pr"><span class="pe" style="font-size:12px;font-weight:700;color:#333;min-width:36px;">VIVO</span><span class="pn"></span><span class="pm">引导至支付宝/微信「自动扣款」设置</span></div>
+            </div>
+
+            <div class="fb">商店渠道：调用平台 API 跳转订阅管理<br>支付宝/微信渠道：展示图文教程引导用户操作<br>跳转失败时：降级展示对应平台的图文取消教程</div>
             <div class="spc"></div>
             <button class="bd" onclick="go(1)">← 回到 Step 1</button>
           </div>
@@ -318,9 +328,10 @@
   </div>
 
   <div id="a4" class="hid">
-    <div class="an"><div class="tg ky">核心</div><div><div class="ant">「管理订阅」和「继续取消」的共同终点</div><div class="and">两条路径最终都跳到同一个系统设置页，但经过的链路和埋点不同</div></div></div>
-    <div class="an"><div class="tg ux">UX</div><div><div class="ant">按平台自动识别跳转方式</div><div class="and">iOS → StoreKit 2 · Google Play → Deep Link · 鸿蒙 → HMS IAP</div></div></div>
-    <div class="an"><div class="tg ux">UX</div><div><div class="ant">跳转失败 → 降级图文教程</div><div class="and">不让用户卡在死胡同，低版本或 API 异常时有兜底</div></div></div>
+    <div class="an"><div class="tg ky">核心</div><div><div class="ant">两类渠道，两种取消体验</div><div class="and">商店渠道（iOS/华为/鸿蒙/小米）可调用 API 直接跳转；支付宝/微信渠道（OPPO/VIVO）无法直接跳转，需引导用户手动操作</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">商店渠道：调用平台 API 跳转订阅管理页</div><div class="and">iOS → StoreKit 2 · 华为 → 华为支付 · 鸿蒙 → HMS IAP · 小米 → 小米支付</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">支付宝/微信渠道：展示图文取消教程</div><div class="and">OPPO/VIVO 用户需要去支付宝或微信的「自动扣款」中取消，App 内展示分步图文引导</div></div></div>
+    <div class="an"><div class="tg ux">UX</div><div><div class="ant">跳转失败 → 统一降级为图文教程</div><div class="and">任何渠道跳转异常时都有兜底方案，不让用户卡在死胡同</div></div></div>
   </div>
 
   <div id="a5" class="hid">
@@ -335,7 +346,7 @@ const ST={
   1:{t:'Step 1 · 会员中心',d:'两个明确出口：「管理订阅」直达系统设置 ·「取消订阅」进入挽留流程'},
   2:{t:'Step 2 · 取消确认',d:'用具体权益清单告诉用户「你将失去什么」— 损失厌恶驱动的第一层挽留'},
   3:{t:'Step 3 · 取消原因问卷',d:'V1 核心 — 收集取消原因数据，不做分支挽留'},
-  4:{t:'Step 4 · 跳转系统设置',d:'「管理订阅」和「继续取消」的共同终点 — 按平台跳转'},
+  4:{t:'Step 4 · 跳转订阅管理',d:'商店渠道调用 API 跳转 · 支付宝/微信渠道展示图文教程'},
   5:{t:'Step 5 · 保留成功',d:'用户选择留下后的正向反馈 · 情感闭环'},
 };
 function go(n){
