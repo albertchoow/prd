@@ -187,7 +187,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC"
 </div>
 <div style="margin-top:auto;padding-top:20px">
 <div class="btn-secondary" id="submitBtn" style="opacity:.35;pointer-events:none" onclick="submitReason()">提交</div>
-<div class="btn-secondary" onclick="goStep(2)">暂不取消</div>
+<div class="btn-secondary" onclick="goStep(1)">暂不取消</div>
 </div>
 </div>
 </div>
@@ -214,7 +214,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC"
 <div class="benefit-row"><div class="benefit-check"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#FF8533" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="benefit-text">睡眠分析和个性化推荐</div></div>
 </div>
 <div style="margin-top:auto;padding-top:24px">
-<div class="btn-primary" onclick="showToast('已解锁 6 折优惠，续费价 ¥158/年')" style="padding:17px;font-size:16px">解锁 6 折优惠</div>
+<div class="btn-primary" onclick="showToast('已解锁 6 折优惠，续费价 ¥158/年');setTimeout(function(){goStep(1)},1600)" style="padding:17px;font-size:16px">解锁 6 折优惠</div>
 <div class="btn-secondary" onclick="goStep(5)">继续取消</div>
 </div>
 </div>
@@ -243,7 +243,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC"
 <div style="font-size:12px;color:rgba(0,0,0,0.25);margin-top:4px">取消后可继续使用至到期，到期后不再自动扣费</div>
 </div>
 <div style="margin-top:auto;padding-top:20px">
-<div class="btn-secondary" onclick="showToast('已保留订阅')">我再想想</div>
+<div class="btn-secondary" onclick="showToast('已保留订阅');setTimeout(function(){goStep(1)},1600)">我再想想</div>
 <div class="btn-secondary" onclick="showToast('已取消自动续费，会员有效至 2027/04/09')">确认取消自动续费</div>
 </div>
 </div>
