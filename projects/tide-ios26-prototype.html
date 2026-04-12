@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潮汐 · 订阅管理 · iOS 26</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;background:#F0F0F5;color:#1a1a1a;overflow-x:hidden}
+.hidden{display:none!important}
+.phone{width:340px;background:#111;border-radius:44px;padding:12px;box-shadow:0 24px 80px rgba(0,0,0,.2)}
+.screen{background:#fff;border-radius:32px;overflow:hidden;min-height:736px;display:flex;flex-direction:column;position:relative}
+.safe-area-top{height:28px;flex-shrink:0}
+.navbar{display:flex;align-items:center;padding:10px 16px;background:rgba(255,255,255,0.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}
+.navbar .back{font-size:22px;color:rgba(0,0,0,0.45);width:30px;cursor:pointer;transition:opacity .12s}
+.navbar .back:active{opacity:.5}
+.navbar .title{flex:1;text-align:center;font-size:15px;font-weight:500;color:rgba(0,0,0,0.70)}
+.navbar .spacer{width:30px}
+.navbar .help-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;transition:background .15s}
+.navbar .help-btn:active{background:rgba(0,0,0,0.04)}
+.content{flex:1;display:flex;flex-direction:column;padding:20px;overflow-y:auto}
+.glass-card{background:rgba(255,255,255,0.65);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:0.5px solid rgba(255,255,255,0.5);border-radius:20px;padding:18px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.03)}
+.member-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:0.5px solid rgba(0,0,0,0.05)}
+.member-icon{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#FFD699,#FFBA5C);display:flex;align-items:center;justify-content:center}
+.member-name{font-size:15px;font-weight:500;color:rgba(0,0,0,0.70)}
+.member-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:500;background:rgba(255,133,51,0.08);color:#FF7A2E;margin-left:auto}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.info-label{font-size:13px;color:rgba(0,0,0,0.35)}
+.info-value{font-size:13px;font-weight:500;color:rgba(0,0,0,0.65)}
+.manage-btn{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:11px;margin-top:12px;border:none;border-radius:12px;background:rgba(0,0,0,0.04);font-size:13px;font-weight:500;color:rgba(0,0,0,0.45);cursor:pointer;font-family:inherit;transition:all .12s;backdrop-filter:blur(8px)}
+.manage-btn:active{background:rgba(0,0,0,0.07);transform:scale(.97)}
+.section-label{font-size:12px;font-weight:500;color:rgba(0,0,0,0.25);margin:4px 0 8px;letter-spacing:0.3px}
+.menu-group{border-radius:16px;overflow:hidden;margin-bottom:16px;background:rgba(255,255,255,0.5);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.4)}
+.menu-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:transparent;cursor:pointer;border:none;width:100%;font-family:inherit;text-align:left;transition:background .12s;border-bottom:0.5px solid rgba(0,0,0,0.04)}
+.menu-item:last-child{border-bottom:none}
+.menu-item:active{background:rgba(0,0,0,0.03)}
+.menu-item .m-label{font-size:14px;font-weight:400;color:rgba(0,0,0,0.65)}
+.menu-item .m-sub{font-size:11px;color:rgba(0,0,0,0.25);margin-top:2px}
+.menu-item .m-arrow{font-size:16px;color:rgba(0,0,0,0.15);flex-shrink:0;margin-left:8px}
+.faq-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:0.5px solid rgba(0,0,0,0.04);cursor:pointer;transition:opacity .12s}
+.faq-item:last-child{border-bottom:none}
+.faq-item:active{opacity:.6}
+.faq-text{font-size:13px;color:rgba(0,0,0,0.50);line-height:18px;flex:1}
+.faq-arrow{font-size:12px;color:rgba(0,0,0,0.15);flex-shrink:0;margin-left:8px;transition:transform .2s}
+.faq-item.expanded .faq-arrow{transform:rotate(180deg)}
+.faq-answer{font-size:12px;color:rgba(0,0,0,0.35);line-height:18px;padding:0 0 12px;border-bottom:0.5px solid rgba(0,0,0,0.04);display:none}
+.faq-answer.show{display:block}
+.faq-answer a{color:#FF8533;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.status-card{background:rgba(245,245,247,0.7);backdrop-filter:blur(12px);border-radius:20px;padding:18px;margin-bottom:16px;border:0.5px solid rgba(255,255,255,0.4)}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(22,163,74,0.06);color:#16a34a}
+.s-info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid rgba(0,0,0,0.04)}
+.s-info-row:last-child{border-bottom:none}
+.q-title{font-size:20px;font-weight:600;color:rgba(0,0,0,0.75);line-height:30px;margin-top:16px}
+.q-sub{font-size:13px;color:rgba(0,0,0,0.30);margin-top:8px}
+.opt-group{margin-top:20px}
+.opt-btn{width:100%;padding:14px 16px;border:1.5px solid rgba(0,0,0,0.08);border-radius:14px;background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);font-size:14px;font-weight:400;color:rgba(0,0,0,0.60);cursor:pointer;margin-bottom:8px;font-family:inherit;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all .2s}
+.opt-btn:active{transform:scale(.97)}
+.opt-btn .radio{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.15);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.opt-btn.selected{border-color:#FF8533;background:rgba(255,133,51,0.05);color:rgba(0,0,0,0.75);font-weight:500}
+.opt-btn.selected .radio{border-color:#FF8533;background:#FF8533}
+.icon-gift{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(255,243,224,0.8),rgba(255,224,178,0.8));backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;margin:20px auto 16px;border:0.5px solid rgba(255,255,255,0.5)}
+.emp-title{font-size:20px;font-weight:600;color:rgba(0,0,0,0.75);text-align:center;line-height:30px}
+.offer-box{background:rgba(255,248,240,0.7);backdrop-filter:blur(12px);border:0.5px solid rgba(255,255,255,0.5);border-radius:20px;padding:22px 20px;margin:24px 0 0;text-align:center}
+.price-line{display:flex;align-items:baseline;justify-content:center;gap:8px}
+.price-new{font-size:32px;font-weight:700;color:#FF7A2E}
+.price-new .unit{font-size:14px;font-weight:400}
+.price-old{font-size:14px;color:rgba(0,0,0,0.22);text-decoration:line-through}
+.discount-label{display:inline-block;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(255,122,46,0.08);color:#FF7A2E;margin-left:6px}
+.save-tag{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:500;background:rgba(22,163,74,0.05);color:#16a34a}
+.week-price{font-size:12px;color:rgba(0,0,0,0.25);margin-top:6px}
+.benefit-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+.benefit-check{width:18px;height:18px;border-radius:50%;background:rgba(255,133,51,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.benefit-text{font-size:13px;color:rgba(0,0,0,0.50);line-height:18px}
+.loss-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.04)}
+.loss-item:last-child{border-bottom:none}
+.loss-dot{width:6px;height:6px;border-radius:50%;background:#dc2626;flex-shrink:0;opacity:.7}
+.loss-text{font-size:13px;color:rgba(0,0,0,0.50);line-height:18px}
+.btn-primary{width:100%;padding:15px;border:none;border-radius:16px;background:linear-gradient(135deg,#FF9A56,#FF7A2E);color:#fff;font-size:15px;font-weight:600;text-align:center;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-primary:active{opacity:.85;transform:scale(.97)}
+.btn-secondary{width:100%;padding:15px;border:1.5px solid rgba(0,0,0,0.10);border-radius:16px;background:#fff;color:rgba(0,0,0,0.55);font-size:15px;font-weight:500;text-align:center;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .12s}
+.btn-secondary:active{background:rgba(0,0,0,0.02);transform:scale(.97)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.screen-enter{animation:fadeInUp .3s ease-out}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastOut{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,20px)}}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);backdrop-filter:blur(16px);color:#fff;padding:10px 24px;border-radius:24px;font-size:13px;font-weight:500;z-index:1000;animation:toastIn .25s ease-out;pointer-events:none}
+.toast.leaving{animation:toastOut .25s ease-in forwards}
+.step-nav{display:flex;align-items:center;justify-content:center;padding:10px 20px}
+.step-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;border:2.5px solid transparent}
+.step-dot.current{background:#FF8533;color:#fff;border-color:#FF8533;box-shadow:0 3px 14px rgba(255,133,51,.35)}
+.step-dot.done{background:#D1FAE5;color:#166534}
+.step-dot.upcoming{background:#F3F4F6;color:#999}
+.step-connector{width:12px;height:2px;background:#E5E7EB;transition:background .3s}
+.step-connector.done{background:#86EFAC}
+.step-info{text-align:center;padding:0 20px 6px}
+.si-title{font-size:13px;font-weight:500;color:rgba(0,0,0,0.70)}
+.si-desc{font-size:11px;color:rgba(0,0,0,0.30);margin-top:2px}
+.anno-card{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.anno-tag{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.anno-tag.core{background:#FCE7F3;color:#9D174D}
+.anno-tag.ux{background:#DBEAFE;color:#1E40AF}
+.anno-tag.copy{background:#FEF3C7;color:#92400E}
+.anno-title{font-size:12.5px;font-weight:600;color:#333}
+.anno-desc{font-size:11px;color:#999;margin-top:2px;line-height:1.5}
+</style>
+</head>
+<body>
+<div style="text-align:center;padding:40px 20px 10px">
+<div style="font-size:28px;font-weight:800;color:#1a1a1a">潮汐 · 订阅管理</div>
+<div style="font-size:14px;color:#999;margin-top:8px">iOS 26 Liquid Glass · 完整取消挽留流程</div>
+</div>
+<div class="step-nav">
+<div class="step-dot current" id="dot1" onclick="goStep(1)">1</div><div class="step-connector" id="conn1"></div>
+<div class="step-dot upcoming" id="dot2" onclick="goStep(2)">2</div><div class="step-connector" id="conn2"></div>
+<div class="step-dot upcoming" id="dot3" onclick="goStep(3)">3</div><div class="step-connector" id="conn3"></div>
+<div class="step-dot upcoming" id="dot4" onclick="goStep(4)">4</div><div class="step-connector" id="conn4"></div>
+<div class="step-dot upcoming" id="dot5" onclick="goStep(5)">5</div>
+</div>
+<div class="step-info"><div class="si-title" id="stepTitle">Step 1 · 会员中心</div><div class="si-desc" id="stepDesc">订阅信息卡片 + 管理订阅入口</div></div>
+
+<div style="display:flex;justify-content:center;padding:20px 0" class="phone-center">
+<div class="phone">
+
+<!-- Screen 1: 会员中心 -->
+<div class="screen" id="screen1">
+<div class="safe-area-top"></div>
+<div class="navbar">
+<div class="back" onclick="showToast('返回设置')">&#8249;</div>
+<div class="title">会员中心</div>
+<div class="help-btn" onclick="showToast('打开帮助')"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="rgba(0,0,0,0.30)" stroke-width="1.2"/><path d="M8 7.5C8 6.67 8.67 6 9.5 6h1c.83 0 1.5.67 1.5 1.5S11.33 9 10.5 9H10v1.5" stroke="rgba(0,0,0,0.30)" stroke-width="1.2" stroke-linecap="round"/><circle cx="10" cy="13" r=".8" fill="rgba(0,0,0,0.30)"/></svg></div>
+</div>
+<div class="content">
+<div class="glass-card">
+<div class="member-header">
+<div class="member-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7.5L18 8.5L14 12.5L15 18L10 15.5L5 18L6 12.5L2 8.5L7.5 7.5L10 2Z" fill="white" opacity=".9"/></svg></div>
+<div><div class="member-name">潮汐 Plus</div></div>
+<div class="member-badge">年度会员</div>
+</div>
+<div class="info-row"><span class="info-label">订阅方案</span><span class="info-value">连续包年</span></div>
+<div class="info-row"><span class="info-label">续期时间</span><span class="info-value">2027 年 4 月 9 日</span></div>
+<div class="info-row"><span class="info-label">扣费金额</span><span class="info-value">&#165;198.00</span></div>
+<button class="manage-btn" onclick="goStep(2)">管理订阅 <span style="color:rgba(0,0,0,0.20)">&#8250;</span></button>
+</div>
+<div class="section-label">常见问题</div>
+<div style="padding:0 2px">
+<div class="faq-item" onclick="toggleFaq(this,0)"><span class="faq-text">如何取消连续订阅会员？</span><span class="faq-arrow">&#8964;</span></div>
+<div class="faq-answer" id="faq0">你可以在 <a onclick="goStep(2)">订阅管理</a> 中取消自动续费。取消后，当前会员权益保留至到期日。也可以在 iPhone「设置 > Apple ID > 订阅」中操作。</div>
+<div class="faq-item" onclick="toggleFaq(this,1)"><span class="faq-text">不小心重复购买了怎么办？</span><span class="faq-arrow">&#8964;</span></div>
+<div class="faq-answer" id="faq1">请联系客服，我们会尽快核实并处理。</div>
+<div class="faq-item" onclick="toggleFaq(this,2)"><span class="faq-text">扣了钱但会员未生效？</span><span class="faq-arrow">&#8964;</span></div>
+<div class="faq-answer" id="faq2">请尝试「恢复购买」。如仍未生效，请联系客服并提供购买凭证截图。</div>
+<div class="faq-item" onclick="toggleFaq(this,3)"><span class="faq-text">购买 Plus 会员后可以退款吗？</span><span class="faq-arrow">&#8964;</span></div>
+<div class="faq-answer" id="faq3">对于 iOS 用户：可在购买后 90 天内通过 Apple 申请退款，前往 iPhone「设置 > Apple ID > 媒体与购买项目 > 购买历史记录」操作。对于 Android 用户：如需申请退款，请通过「意见反馈」联系我们。</div>
+</div>
+<div style="height:20px"></div>
+</div>
+</div>
+
+<!-- Screen 2: 订阅管理 -->
+<div class="screen hidden" id="screen2">
+<div class="safe-area-top"></div>
+<div class="navbar"><div class="back" onclick="goStep(1)">&#8249;</div><div class="title">订阅管理</div><div class="spacer"></div></div>
+<div class="content">
+<div class="section-label" style="margin-top:8px">管理</div>
+<div class="menu-group">
+<button class="menu-item" onclick="showToast('跳转 App Store 订阅管理')"><div><div class="m-label">查看订阅状态</div><div class="m-sub">在 App Store 中查看和管理</div></div><span class="m-arrow">&#8250;</span></button>
+<button class="menu-item" onclick="goStep(3)"><div><div class="m-label">取消自动续费</div><div class="m-sub">当前会员仍可使用至到期</div></div><span class="m-arrow">&#8250;</span></button>
+</div>
+</div>
+</div>
+
+<!-- Screen 3: 取消原因问卷 -->
+<div class="screen hidden" id="screen3">
+<div class="safe-area-top"></div>
+<div class="navbar"><div class="back" onclick="goStep(2)">&#8249;</div><div class="title">取消订阅</div><div class="spacer"></div></div>
+<div class="content">
+<div style="background:linear-gradient(180deg,rgba(255,244,230,0.5) 0%,rgba(255,255,255,0) 100%);margin:-20px -20px 0;padding:24px 20px 20px;border-radius:0">
+<div class="q-title" style="color:rgba(0,0,0,0.80)">可以告诉我们原因吗？</div>
+<div class="q-sub" style="color:rgba(0,0,0,0.35)">你的反馈将帮助我们改进</div>
+</div>
+<div class="opt-group" id="cancelReasons">
+<div class="opt-btn" onclick="selectReason(this,'usage')"><span>我没有充分使用潮汐</span><div class="radio"></div></div>
+<div class="opt-btn" onclick="selectReason(this,'price')"><span>价格有点贵</span><div class="radio"></div></div>
+<div class="opt-btn" onclick="selectReason(this,'content')"><span>没有找到适合我的内容</span><div class="radio"></div></div>
+<div class="opt-btn" onclick="selectReason(this,'experience')"><span>使用中遇到了问题</span><div class="radio"></div></div>
+<div class="opt-btn" onclick="selectReason(this,'none')"><span>只是想取消，没有特别原因</span><div class="radio"></div></div>
+</div>
+<div style="margin-top:auto;padding-top:20px">
+<div class="btn-secondary" id="submitBtn" style="opacity:.35;pointer-events:none" onclick="submitReason()">提交</div>
+<div class="btn-secondary" onclick="goStep(2)">暂不取消</div>
+</div>
+</div>
+</div>
+
+<!-- Screen 4: 挽留 -->
+<div class="screen hidden" id="screen4">
+<div class="safe-area-top"></div>
+<div class="navbar"><div class="back" onclick="goStep(3)">&#8249;</div><div class="title">取消订阅</div><div class="spacer"></div></div>
+<div class="content">
+<div class="icon-gift"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF8533" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M12 8c-1.5-2-4-3-4-3s1.5-2 4 0c2.5-2 4 0 4 0s-2.5 1-4 3"/></svg></div>
+<div class="emp-title">为你保留了 6 折续费价</div>
+<div class="offer-box">
+<div class="price-line">
+<span class="price-old">&#165;268/年</span>
+<span class="price-new">&#165;158<span class="unit">/年</span></span>
+<span class="discount-label">6 折</span>
+</div>
+<div class="save-tag">为你节省 &#165;110</div>
+<div class="week-price">每周仅 &#165;3.04</div>
+</div>
+<div style="margin-top:20px;padding:0 2px">
+<div class="benefit-row"><div class="benefit-check"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#FF8533" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="benefit-text">全部睡眠故事和冥想练习</div></div>
+<div class="benefit-row"><div class="benefit-check"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#FF8533" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="benefit-text">专注模式全场景解锁</div></div>
+<div class="benefit-row"><div class="benefit-check"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="#FF8533" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="benefit-text">睡眠分析和个性化推荐</div></div>
+</div>
+<div style="margin-top:auto;padding-top:24px">
+<div class="btn-primary" onclick="showToast('已解锁 6 折优惠，续费价 ¥158/年')" style="padding:17px;font-size:16px">解锁 6 折优惠</div>
+<div class="btn-secondary" onclick="goStep(5)">继续取消</div>
+</div>
+</div>
+</div>
+
+<!-- Screen 5: 二次确认 -->
+<div class="screen hidden" id="screen5">
+<div class="safe-area-top"></div>
+<div class="navbar"><div class="back" onclick="goStep(4)">&#8249;</div><div class="title">确认取消</div><div class="spacer"></div></div>
+<div class="content">
+<div style="text-align:center;padding-top:10px">
+<div class="icon-gift" style="background:linear-gradient(135deg,rgba(227,242,253,0.8),rgba(187,222,251,0.8))">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#1e88e5" stroke-width="1.2" opacity=".4"/><path d="M9 9h6M9 12h6M9 15h4" stroke="#1e88e5" stroke-width="1.2" stroke-linecap="round"/></svg>
+</div>
+<div class="emp-title">取消后你将失去</div>
+</div>
+<div style="margin-top:20px">
+<div class="loss-item"><div class="loss-dot"></div><div class="loss-text">全部睡眠故事和冥想练习解锁权限</div></div>
+<div class="loss-item"><div class="loss-dot"></div><div class="loss-text">专注模式全场景解锁</div></div>
+<div class="loss-item"><div class="loss-dot"></div><div class="loss-text">睡眠分析报告和个性化推荐</div></div>
+<div class="loss-item"><div class="loss-dot"></div><div class="loss-text">未来新增内容的抢先体验</div></div>
+</div>
+<div class="glass-card" style="margin-top:16px;padding:14px 16px">
+<div style="font-size:12px;color:rgba(0,0,0,0.25)">你的会员有效期至</div>
+<div style="font-size:15px;font-weight:500;color:rgba(0,0,0,0.65);margin-top:4px">2027 年 4 月 9 日</div>
+<div style="font-size:12px;color:rgba(0,0,0,0.25);margin-top:4px">取消后可继续使用至到期，到期后不再自动扣费</div>
+</div>
+<div style="margin-top:auto;padding-top:20px">
+<div class="btn-secondary" onclick="showToast('已保留订阅')">我再想想</div>
+<div class="btn-secondary" onclick="showToast('已取消自动续费，会员有效至 2027/04/09')">确认取消自动续费</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- Annotations -->
+<div style="max-width:500px;margin:20px auto;padding:0 20px" id="anno1">
+<div class="anno-card"><div class="anno-tag core">核心</div><div><div class="anno-title">Liquid Glass 卡片层级</div><div class="anno-desc">会员卡片和菜单组使用半透明 + backdrop-filter 模拟 iOS 26 的 Liquid Glass 质感，导航栏透明模糊，内容穿透可见</div></div></div>
+<div class="anno-card"><div class="anno-tag ux">UX</div><div><div class="anno-title">FAQ 内嵌操作链路</div><div class="anno-desc">「如何取消」展开后引导到订阅管理页，「可以退款吗」指向 Apple 退款流程，用户从问题自然走到操作</div></div></div>
+<div class="anno-card"><div class="anno-tag copy">文案</div><div><div class="anno-title">「管理订阅」中性入口</div><div class="anno-desc">不写「取消」也不写单独的「管理」，明确范围又保持中性引导</div></div></div>
+</div>
+
+<div style="max-width:500px;margin:20px auto;padding:0 20px" id="anno2" class="hidden">
+<div class="anno-card"><div class="anno-tag core">核心</div><div><div class="anno-title">操作按正向度分层</div><div class="anno-desc">查看状态（中性）→ 取消续费（温和），退款走 FAQ 指引到 Apple 渠道，不在此页设入口</div></div></div>
+<div class="anno-card"><div class="anno-tag copy">文案</div><div><div class="anno-title">「取消自动续费」而非「取消订阅」</div><div class="anno-desc">副标题「当前会员仍可使用至到期」前置打消焦虑</div></div></div>
+</div>
+
+<div style="max-width:500px;margin:20px auto;padding:0 20px" id="anno3" class="hidden">
+<div class="anno-card"><div class="anno-tag copy">文案</div><div><div class="anno-title">第一人称 + 语气柔化</div><div class="anno-desc">「我没有充分使用潮汐」而非「用得不多」，「价格有点贵」而非「价格太贵了」，减少对抗感</div></div></div>
+<div class="anno-card"><div class="anno-tag ux">UX</div><div><div class="anno-title">使用频率放第一，价格放第二</div><div class="anno-desc">避免暗示「就是因为贵」，使用频率低的用户挽留空间最大。选「价格贵」路由到折扣页，其他直接到确认页</div></div></div>
+</div>
+
+<div style="max-width:500px;margin:20px auto;padding:0 20px" id="anno4" class="hidden">
+<div class="anno-card"><div class="anno-tag core">核心</div><div><div class="anno-title">&#165;268 → &#165;158，6 折锚定</div><div class="anno-desc">用 paywall 原价做锚定，保持价格叙事一致。&#165;158 = 现有首年 SKU，零技术成本</div></div></div>
+<div class="anno-card"><div class="anno-tag copy">文案</div><div><div class="anno-title">直给式「为你保留了 6 折续费价」</div><div class="anno-desc">不煽情不解释，符合 TIDE 克制温暖的调性</div></div></div>
+<div class="anno-card"><div class="anno-tag ux">UX</div><div><div class="anno-title">双按钮同等层级</div><div class="anno-desc">橙色「解锁 6 折优惠」+ 白色「继续取消」，尊重用户选择，不藏退出入口</div></div></div>
+</div>
+
+<div style="max-width:500px;margin:20px auto;padding:0 20px" id="anno5" class="hidden">
+<div class="anno-card"><div class="anno-tag core">核心</div><div><div class="anno-title">权益损失清单 + 到期日</div><div class="anno-desc">逐条列出失去的具体权益触发损失厌恶。到期日再次强调「取消 ≠ 立即失效」</div></div></div>
+<div class="anno-card"><div class="anno-tag ux">UX</div><div><div class="anno-title">正向默认在上</div><div class="anno-desc">「我再想想」橙色 CTA 在上方，「确认取消」白色按钮在下方</div></div></div>
+</div>
+
+<div style="height:60px"></div>
+
+<script>
+var totalSteps=5,currentStep=1,selectedReason=null;
+var steps={
+1:{title:'Step 1 · 会员中心',desc:'订阅信息卡片 + 管理订阅入口'},
+2:{title:'Step 2 · 订阅管理',desc:'操作分层，退款走 FAQ 指引'},
+3:{title:'Step 3 · 取消原因',desc:'第一人称问卷，路由挽留策略'},
+4:{title:'Step 4 · 6 折挽留',desc:'直给式文案 + 价格三重锚定'},
+5:{title:'Step 5 · 二次确认',desc:'权益损失清单，最后拦截'}
+};
+function goStep(n){
+if(n<1||n>totalSteps)return;
+currentStep=n;
+for(var i=1;i<=totalSteps;i++){
+document.getElementById('screen'+i).classList.add('hidden');
+document.getElementById('screen'+i).classList.remove('screen-enter');
+var a=document.getElementById('anno'+i);if(a)a.classList.add('hidden');
+var d=document.getElementById('dot'+i);if(d)d.className='step-dot '+(i<n?'done':i===n?'current':'upcoming');
+}
+document.querySelectorAll('.step-connector').forEach(function(c,idx){c.classList.toggle('done',idx<n-1)});
+var cs=document.getElementById('screen'+n);cs.classList.remove('hidden');void cs.offsetWidth;cs.classList.add('screen-enter');
+var an=document.getElementById('anno'+n);if(an)an.classList.remove('hidden');
+document.getElementById('stepTitle').textContent=steps[n].title;
+document.getElementById('stepDesc').textContent=steps[n].desc;
+document.querySelector('.phone-center').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function showToast(msg){
+var e=document.querySelector('.toast');if(e)e.remove();
+var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);
+setTimeout(function(){t.classList.add('leaving')},1200);setTimeout(function(){t.remove()},1500);
+}
+function selectReason(el,reason){
+document.querySelectorAll('#cancelReasons .opt-btn').forEach(function(b){b.classList.remove('selected')});
+el.classList.add('selected');selectedReason=reason;
+var btn=document.getElementById('submitBtn');btn.style.opacity='1';btn.style.pointerEvents='auto';
+}
+function submitReason(){
+if(!selectedReason)return;
+goStep(selectedReason==='price'?4:5);
+}
+function toggleFaq(el,idx){
+var a=document.getElementById('faq'+idx),isOpen=a.classList.contains('show');
+document.querySelectorAll('.faq-answer').forEach(function(x){x.classList.remove('show')});
+document.querySelectorAll('.faq-item').forEach(function(x){x.classList.remove('expanded')});
+if(!isOpen){a.classList.add('show');el.classList.add('expanded')}
+}
+goStep(1);
+</script>
+</body>
+</html>
